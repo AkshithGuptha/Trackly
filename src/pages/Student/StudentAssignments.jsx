@@ -21,7 +21,7 @@ export default function StudentAssignments() {
     ? groupedAssignments 
     : { [selectedTopic]: groupedAssignments[selectedTopic] || [] };
 
-  const handleSubmit = (e, id) => {
+  const handleSubmit = async (e, id) => {
     e.stopPropagation();
     await submitWork({ assignment_id: id, comment: 'Submitted from Trackly.' });
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
