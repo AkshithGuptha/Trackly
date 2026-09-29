@@ -22,11 +22,11 @@ class AppTheme {
       textTheme: GoogleFonts.plusJakartaSansTextTheme(
         ThemeData.light().textTheme,
       ),
-      cardTheme: const CardThemeData(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
+          side: BorderSide(color: Color(0xFFE2E8F0)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
