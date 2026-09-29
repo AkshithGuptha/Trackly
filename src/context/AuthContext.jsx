@@ -50,6 +50,33 @@ export function AuthProvider({ children }) {
     setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const updateProfile = async ({ full_name, avatarFile } = {}) => {
+    if (!profile?.id) throw new Error('You must be signed in to update your profile.');
+    let avatar_url = profile.avatar_url || null;
+    if (avatarFile && isSupabaseConfigured) {
+      const extension = avatarFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = profile.id + '/avatar-' + Date.now() + '.' + extension;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, avatarFile, { contentType: avatarFile.type || 'image/jpeg', upsert: false });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      avatar_url = data.publicUrl;
+    } else if (avatarFile && !isSupabaseConfigured) {
+      avatar_url = URL.createObjectURL(avatarFile);
+    }
+    const updates = {};
+    if (typeof full_name === 'string' && full_name.trim()) updates.full_name = full_name.trim();
+    if (avatar_url) updates.avatar_url = avatar_url;
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase.from('profiles').update(updates).eq('id', profile.id).select('*').single();
+      if (error) throw error;
+      setProfile(data);
+      return data;
+    }
+    const nextProfile = { ...profile, ...updates };
+    setProfile(nextProfile);
+    return nextProfile;
+  };
+
   // Load Auth state
   useEffect(() => {
     const initAuth = async () => {
@@ -456,6 +483,7 @@ export function AuthProvider({ children }) {
         loading,
         themeMode,
         toggleTheme,
+        updateProfile,
         login,
         signup,
         logout,
