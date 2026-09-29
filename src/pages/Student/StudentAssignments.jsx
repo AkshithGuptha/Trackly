@@ -23,9 +23,8 @@ export default function StudentAssignments() {
 
   const handleSubmit = (e, id) => {
     e.stopPropagation();
-    // Simulate submission
+    await submitWork({ assignment_id: id, comment: 'Submitted from Trackly.' });
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    // In a real app we'd call submitWork here, but we mock the UI for now.
   };
 
   return (
