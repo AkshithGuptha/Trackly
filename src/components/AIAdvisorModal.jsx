@@ -6,74 +6,31 @@ export default function AIAdvisorModal({ onClose }) {
   const { assignments, projects, progressUpdates, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+  const [error, setError] = useState('');
 
-  const runAnalysis = () => {
+  const runAnalysis = async () => {
     setLoading(true);
-    setTimeout(() => {
-      const now = Date.now();
-      const activeAssignments = assignments.filter((a) => !['Completed'].includes(a.status));
-      const completedAssignments = assignments.filter((a) => a.status === 'Completed');
-      const assignmentProgress = assignments.length
-        ? Math.round(assignments.reduce((sum, a) => sum + Number(a.progress_percentage || 0), 0) / assignments.length)
-        : 0;
-      const projectProgress = projects.length
-        ? Math.round(projects.reduce((sum, p) => sum + Number(p.progress_percentage || 0), 0) / projects.length)
-        : 0;
-      const overallCompletion = assignments.length || projects.length
-        ? Math.round(((assignmentProgress * (assignments.length ? 1 : 0)) + (projectProgress * (projects.length ? 1 : 0))) / ((assignments.length ? 1 : 0) + (projects.length ? 1 : 0)))
-        : 0;
-
-      const urgent = activeAssignments.filter((a) => {
-        const due = new Date(a.due_date).getTime();
-        const daysLeft = Math.ceil((due - now) / 86400000);
-        return daysLeft <= 2 && Number(a.progress_percentage || 0) < 80;
+    setError('');
+    try {
+      const response = await fetch((import.meta.env.VITE_AI_API_URL || 'https://trackly-ai.onrender.com') + '/api/ai-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'Analyze my current workload, completion risk, deadlines, project tasks, and progress logs. Give me the most important actions I should take next.',
+          profile,
+          assignments,
+          projects,
+          progressUpdates
+        })
       });
-
-      const overdue = activeAssignments.filter((a) => new Date(a.due_date).getTime() < now);
-      const remainingTasks = projects.reduce((sum, p) => sum + (p.tasks || []).filter((t) => !t.is_completed).length, 0);
-
-      let riskLevel = 'Low';
-      if (overdue.length > 0 || urgent.length >= 2) riskLevel = 'High';
-      else if (urgent.length > 0 || remainingTasks >= 4) riskLevel = 'Medium';
-
-      const predictedDelayDays = overdue.length
-        ? Math.min(7, overdue.length + Math.ceil(remainingTasks / 4))
-        : urgent.length
-          ? Math.min(5, Math.ceil(urgent.length / 2))
-          : 0;
-
-      const recommendations = [];
-      if (!assignments.length && !projects.length) {
-        recommendations.push('No assignments or projects are loaded yet. Add work to Trackly and run the analysis again.');
-      } else if (urgent.length) {
-        urgent.slice(0, 3).forEach((a) => {
-          const daysLeft = Math.ceil((new Date(a.due_date).getTime() - now) / 86400000);
-          recommendations.push(`Prioritize "${a.title}" — ${Math.max(0, daysLeft)} day(s) left with ${Number(a.progress_percentage || 0)}% progress.`);
-        });
-      } else {
-        recommendations.push(`Your current tracked work is averaging ${overallCompletion}% completion. Keep updating progress so the forecast stays accurate.`);
-      }
-
-      if (remainingTasks > 0) {
-        recommendations.push(`${remainingTasks} project task(s) remain open. Finish the smallest blockers first to improve project velocity.`);
-      }
-      if (progressUpdates.length) {
-        recommendations.push(`${progressUpdates.length} progress log(s) are available for trend analysis. Keep logging work and blockers daily.`);
-      }
-      if (completedAssignments.length) {
-        recommendations.push(`${completedAssignments.length} assignment(s) are already completed — maintain that cadence on the remaining work.`);
-      }
-      if (!recommendations.length) recommendations.push('Everything is currently on track.');
-
-      setAnalysis({
-        riskLevel,
-        overallCompletion,
-        predictedDelayDays,
-        recommendations,
-        generatedAt: new Date().toLocaleTimeString()
-      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'AI assistant request failed.');
+      setAnalysis({ answer: data.answer, generatedAt: new Date().toLocaleTimeString() });
+    } catch (error) {
+      setError(error.message || 'AI assistant is unavailable right now.');
+    } finally {
       setLoading(false);
-    }, 700);
+    }
   };
 
   return (
@@ -95,12 +52,20 @@ export default function AIAdvisorModal({ onClose }) {
         </div>
 
         <div style={{ padding: '1.5rem' }}>
-          {!analysis && !loading && (
+          {error && !loading && (
+            <div style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(255,0,34,0.08)', border: '1px solid rgba(255,0,34,0.25)', color: 'var(--text-primary)', marginBottom: '1rem' }}>
+              <strong>AI Assistant unavailable</strong>
+              <p style={{ marginTop: '0.4rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{error}</p>
+              <button className="btn btn-secondary" onClick={runAnalysis} style={{ marginTop: '0.8rem', fontSize: '0.8rem' }}>Try Again</button>
+            </div>
+          )}
+
+          {!analysis && !loading && !error && (
             <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
               <Sparkles size={42} color="var(--brand-primary)" style={{ marginBottom: '1rem' }} />
-              <h4>Run AI Health & Delay Risk Analysis</h4>
+              <h4>Ask Trackly AI about your workload</h4>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.5rem 0 1.5rem 0' }}>
-                Analyze active assignments, sub-tasks, daily logs, and historical velocity to predict completion timelines.
+                The AI agent reads your current Trackly data and gives personalized guidance instead of using demo predictions.
               </p>
               <button className="btn btn-primary" onClick={runAnalysis}>
                 <Sparkles size={16} /> Analyze Now
@@ -118,63 +83,21 @@ export default function AIAdvisorModal({ onClose }) {
           )}
 
           {analysis && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              {/* Risk Summary Pills */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.8rem' }}>
-                <div className="card" style={{ padding: '0.8rem', textAlign: 'center', backgroundColor: 'var(--bg-elevated)' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>RISK LEVEL</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: analysis.riskLevel === 'Low' ? 'var(--success)' : 'var(--warning)' }}>
-                    {analysis.riskLevel}
-                  </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--bg-elevated)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
+                  <Bot size={18} color="var(--brand-primary)" />
+                  <strong>Trackly AI</strong>
                 </div>
-
-                <div className="card" style={{ padding: '0.8rem', textAlign: 'center', backgroundColor: 'var(--bg-elevated)' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ESTIMATED DELAY</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: analysis.predictedDelayDays === 0 ? 'var(--success)' : 'var(--danger)' }}>
-                    {analysis.predictedDelayDays === 0 ? '0 Days (On Time)' : `+${analysis.predictedDelayDays} Days`}
-                  </div>
-                </div>
-
-                <div className="card" style={{ padding: '0.8rem', textAlign: 'center', backgroundColor: 'var(--bg-elevated)' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>COMPLETION HEALTH</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--brand-primary)' }}>
-                    {analysis.overallCompletion}%
-                  </div>
-                </div>
+                <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.9rem', lineHeight: 1.7 }}>{analysis.answer}</div>
               </div>
-
-              {/* Recommendations */}
-              <div>
-                <h4 style={{ fontSize: '0.9rem', marginBottom: '0.6rem' }}>AI Recommendations & Insights</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                  {analysis.recommendations.map((rec, index) => (
-                    <div 
-                      key={index}
-                      style={{
-                        display: 'flex',
-                        gap: '0.6rem',
-                        alignItems: 'flex-start',
-                        padding: '0.75rem',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--bg-elevated)',
-                        fontSize: '0.83rem'
-                      }}
-                    >
-                      <CheckCircle2 size={16} color="var(--brand-primary)" style={{ marginTop: '2px', flexShrink: 0 }} />
-                      <span>{rec}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Analyzed at {analysis.generatedAt}</span>
-                <button className="btn btn-secondary" onClick={runAnalysis} style={{ fontSize: '0.8rem' }}>
-                  Re-Analyze
-                </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Generated at {analysis.generatedAt}</span>
+                <button className="btn btn-secondary" onClick={runAnalysis} style={{ fontSize: '0.8rem' }}>Re-Analyze</button>
               </div>
             </div>
           )}
+
         </div>
       </div>
     </div>
