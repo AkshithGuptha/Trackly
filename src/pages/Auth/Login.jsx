@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, Lock, LogIn, Sparkles, UserCheck, ShieldAlert } from 'lucide-react';
+import { Mail, Lock, LogIn, ShieldAlert } from 'lucide-react';
 
 export default function Login({ onSwitchToSignup }) {
-  const { login, switchDemoRole } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,10 +25,6 @@ export default function Login({ onSwitchToSignup }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickDemoLogin = (role) => {
-    switchDemoRole(role);
   };
 
   return (
@@ -120,21 +116,6 @@ export default function Login({ onSwitchToSignup }) {
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
-
-        {/* Quick Demo Instant Access */}
-        <div style={{ marginTop: '1.5rem', paddingTop: '1.2rem', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Instant Demo Access
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
-            <button className="btn btn-secondary" style={{ fontSize: '0.78rem' }} onClick={() => handleQuickDemoLogin('student')}>
-              <UserCheck size={14} color="var(--brand-primary)" /> Demo Student
-            </button>
-            <button className="btn btn-secondary" style={{ fontSize: '0.78rem' }} onClick={() => handleQuickDemoLogin('teacher')}>
-              <UserCheck size={14} color="var(--success)" /> Demo Teacher
-            </button>
-          </div>
-        </div>
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
           Don't have an account?{' '}
