@@ -68,3 +68,5 @@ jobs:
         with:
           name: trackly-android-aab
           path: build/app/outputs/bundle/release/app-release.aab
+
+# Trigger Android release build after Supabase production setup.
