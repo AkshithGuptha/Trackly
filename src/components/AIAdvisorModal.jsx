@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, X, AlertTriangle, CheckCircle2, TrendingUp, Clock, Bot } from 'lucide-react';
+import { Sparkles, X, CheckCircle2, Bot } from 'lucide-react';
 
 export default function AIAdvisorModal({ onClose }) {
   const { assignments, projects, progressUpdates, profile } = useAuth();
@@ -9,36 +9,61 @@ export default function AIAdvisorModal({ onClose }) {
 
   const runAnalysis = () => {
     setLoading(true);
-
     setTimeout(() => {
-      // Analyze current assignments & projects dynamically
-      const openAssignments = assignments.filter((a) => a.status !== 'Completed');
-      const activeProject = projects[0];
+      const now = Date.now();
+      const activeAssignments = assignments.filter((a) => !['Completed'].includes(a.status));
+      const completedAssignments = assignments.filter((a) => a.status === 'Completed');
+      const assignmentProgress = assignments.length
+        ? Math.round(assignments.reduce((sum, a) => sum + Number(a.progress_percentage || 0), 0) / assignments.length)
+        : 0;
+      const projectProgress = projects.length
+        ? Math.round(projects.reduce((sum, p) => sum + Number(p.progress_percentage || 0), 0) / projects.length)
+        : 0;
+      const overallCompletion = assignments.length || projects.length
+        ? Math.round(((assignmentProgress * (assignments.length ? 1 : 0)) + (projectProgress * (projects.length ? 1 : 0))) / ((assignments.length ? 1 : 0) + (projects.length ? 1 : 0)))
+        : 0;
+
+      const urgent = activeAssignments.filter((a) => {
+        const due = new Date(a.due_date).getTime();
+        const daysLeft = Math.ceil((due - now) / 86400000);
+        return daysLeft <= 2 && Number(a.progress_percentage || 0) < 80;
+      });
+
+      const overdue = activeAssignments.filter((a) => new Date(a.due_date).getTime() < now);
+      const remainingTasks = projects.reduce((sum, p) => sum + (p.tasks || []).filter((t) => !t.is_completed).length, 0);
 
       let riskLevel = 'Low';
-      let overallCompletion = 65;
-      let predictedDelayDays = 0;
-      let recommendations = [];
+      if (overdue.length > 0 || urgent.length >= 2) riskLevel = 'High';
+      else if (urgent.length > 0 || remainingTasks >= 4) riskLevel = 'Medium';
 
-      if (openAssignments.some((a) => a.priority === 'High' && a.progress_percentage < 50)) {
-        riskLevel = 'Medium';
-        predictedDelayDays = 1;
-        recommendations.push('High-priority assignment "Neural Network Optimization" has 60% progress with 2 days remaining. Focus next 3 hours on gradient clipping.');
+      const predictedDelayDays = overdue.length
+        ? Math.min(7, overdue.length + Math.ceil(remainingTasks / 4))
+        : urgent.length
+          ? Math.min(5, Math.ceil(urgent.length / 2))
+          : 0;
+
+      const recommendations = [];
+      if (!assignments.length && !projects.length) {
+        recommendations.push('No assignments or projects are loaded yet. Add work to Trackly and run the analysis again.');
+      } else if (urgent.length) {
+        urgent.slice(0, 3).forEach((a) => {
+          const daysLeft = Math.ceil((new Date(a.due_date).getTime() - now) / 86400000);
+          recommendations.push(`Prioritize "${a.title}" — ${Math.max(0, daysLeft)} day(s) left with ${Number(a.progress_percentage || 0)}% progress.`);
+        });
       } else {
-        recommendations.push('On track! All high-priority items are progressing steadily.');
+        recommendations.push(`Your current tracked work is averaging ${overallCompletion}% completion. Keep updating progress so the forecast stays accurate.`);
       }
 
-      if (activeProject) {
-        const completedTasks = activeProject.tasks.filter((t) => t.is_completed).length;
-        const taskRatio = completedTasks / activeProject.tasks.length;
-        if (taskRatio < 0.6) {
-          riskLevel = 'Medium';
-          predictedDelayDays += 2;
-          recommendations.push(`Project "${activeProject.title}" has ${activeProject.tasks.length - completedTasks} remaining tasks. Recommended next step: complete backend integration.`);
-        }
+      if (remainingTasks > 0) {
+        recommendations.push(`${remainingTasks} project task(s) remain open. Finish the smallest blockers first to improve project velocity.`);
       }
-
-      recommendations.push('Daily progress logs indicate consistent velocity over the past 3 days (1.5 tasks/day).');
+      if (progressUpdates.length) {
+        recommendations.push(`${progressUpdates.length} progress log(s) are available for trend analysis. Keep logging work and blockers daily.`);
+      }
+      if (completedAssignments.length) {
+        recommendations.push(`${completedAssignments.length} assignment(s) are already completed — maintain that cadence on the remaining work.`);
+      }
+      if (!recommendations.length) recommendations.push('Everything is currently on track.');
 
       setAnalysis({
         riskLevel,
@@ -47,9 +72,8 @@ export default function AIAdvisorModal({ onClose }) {
         recommendations,
         generatedAt: new Date().toLocaleTimeString()
       });
-
       setLoading(false);
-    }, 1200);
+    }, 700);
   };
 
   return (
@@ -61,8 +85,8 @@ export default function AIAdvisorModal({ onClose }) {
               <Bot size={18} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.05rem' }}>Trackly AI Predictor & Advisor</h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Progress quality analysis & completion delay prediction</p>
+              <h3 style={{ fontSize: '1.05rem' }}>Trackly AI Assistant</h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Context-aware progress analysis and completion guidance</p>
             </div>
           </div>
           <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }} onClick={onClose}>
