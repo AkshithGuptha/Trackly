@@ -29,6 +29,27 @@
   --radius-full: 9999px;
 }
 
+html:not(.dark) {
+  color-scheme: light;
+  --bg-primary: #f5f7fb;
+  --bg-surface: rgba(255, 255, 255, 0.88);
+  --bg-elevated: #ffffff;
+  --border-color: rgba(15, 23, 42, 0.10);
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.08);
+  --shadow-md: 0 4px 12px 0 rgb(15 23 42 / 0.10);
+  --shadow-lg: 0 12px 30px 0 rgb(15 23 42 / 0.14);
+}
+
+html:not(.dark) body { background: var(--bg-primary); color: var(--text-primary); }
+html:not(.dark) .card { background-color: rgba(255,255,255,0.78); }
+html:not(.dark) .modal-overlay { background-color: rgba(15,23,42,0.28); }
+html:not(.dark) .desktop-sidebar button:hover { background: rgba(15,23,42,0.05) !important; }
+html:not(.dark) .mobile-bottom-nav { background: rgba(255,255,255,0.92) !important; }
+html:not(.dark) input, html:not(.dark) textarea, html:not(.dark) select { color: var(--text-primary) !important; }
+
 html.dark {
   /* All variables are now default in :root for Midu dark theme, this is just a fallback */
   --bg-primary: #050505;
@@ -455,6 +476,8 @@ a:focus-visible,
   .card {
     border-radius: 16px;
   }
+
+  html:not(.dark) .mobile-bottom-nav { color: var(--text-primary); }
 
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.2rem; }
