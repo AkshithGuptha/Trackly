@@ -64,22 +64,12 @@ jobs:
             printf 'SUPABASE_ANON_KEY=%s\n' "$CLEAN_KEY"
           } >> "$GITHUB_ENV"
 
-      - name: Build release APK
-        run: flutter build apk --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-
       - name: Build Play Store AAB
         run: flutter build appbundle --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
-      - name: Upload APK
+      - name: Upload Play Store AAB
         uses: actions/upload-artifact@v4
         with:
-          name: trackly-android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-
-      - name: Upload AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: trackly-android-aab
+          name: trackly-play-store-aab
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
