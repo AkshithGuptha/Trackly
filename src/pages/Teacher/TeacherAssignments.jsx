@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Plus, Search, Calendar, Users, CheckCircle, MoreVertical, FileText, Link as LinkIcon, Paperclip, Trash2 } from 'lucide-react';
 
 export default function TeacherAssignments() {
-  const { assignments, connectedStudents, addAssignment, deleteAssignment } = useAuth();
+  const { assignments, connectedStudents, addAssignment, deleteAssignment, profile } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -33,8 +33,8 @@ export default function TeacherAssignments() {
       title,
       description,
       topic,
-      student_id: studentId || 'all',
-      teacher_id: connectedStudents[0]?.teacher_id || 't-101',
+      student_id: studentId && studentId !== 'all' ? studentId : connectedStudents[0]?.id,
+      teacher_id: profile?.id,
       due_date: new Date(dueDate).toISOString(),
       priority,
       status: 'Pending'
