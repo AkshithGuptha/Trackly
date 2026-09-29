@@ -504,3 +504,124 @@ a:focus-visible,
     transition-duration: 0.001ms !important;
   }
 }
+
+
+/* Responsive layout hardening */
+@media (max-width: 767px) {
+  html, body, #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .page-body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .page-body > div {
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .page-body .card {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* Replace desktop two/three-column inline grids on narrow screens. */
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns: 1fr 1fr 1fr"],
+  [style*="grid-template-columns: repeat(auto-fit"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Assignment layout: filters stack above content. */
+  [style*="gap: '3rem'"][style*="maxWidth: '1100px'"] {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  [style*="gap: '3rem'"][style*="maxWidth: '1100px'"] > div:first-child {
+    width: 100% !important;
+    position: static !important;
+  }
+
+  /* Fixed media/cards become fluid. */
+  [style*="width: '280px'"],
+  [style*="width: '300px'"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  [style*="width: '300px'"][style*="height: '180px'"] {
+    height: auto !important;
+    aspect-ratio: 16 / 9;
+  }
+
+  /* Hero banners and large headings scale down cleanly. */
+  .page-body h1 {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  /* Prevent long labels/buttons from forcing horizontal overflow. */
+  .btn {
+    max-width: 100%;
+  }
+
+  /* Settings/forms with horizontal rows stack naturally. */
+  .page-body form > div,
+  .page-body .form-group {
+    min-width: 0;
+  }
+
+  /* Wide data tables remain usable through their existing horizontal scroller. */
+  .page-body table {
+    display: table;
+  }
+
+  /* Keep modals inside the phone viewport. */
+  .modal-overlay {
+    padding: 0.75rem;
+    align-items: flex-start;
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  .modal-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100vh - 1.5rem);
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .page-body {
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .navbar {
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+
+  .mobile-bottom-nav button {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.62rem;
+  }
+}
