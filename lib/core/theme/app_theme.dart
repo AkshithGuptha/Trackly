@@ -22,7 +22,7 @@ class AppTheme {
       textTheme: GoogleFonts.plusJakartaSansTextTheme(
         ThemeData.light().textTheme,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: const CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
