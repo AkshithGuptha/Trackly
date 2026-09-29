@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { User, Bell, Shield, Save, CheckCircle } from 'lucide-react';
 
 export default function StudentSettings() {
-  const { profile } = useAuth();
+  const { profile, updateProfile } = useAuth();
   const [isSaved, setIsSaved] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(profile?.avatar_url || '');
+  const fileInputRef = useRef(null);
 
   // Form State
   const [profileData, setProfileData] = useState({
     name: profile?.full_name || 'Student Name',
     email: profile?.email || 'student@university.edu'
   });
+
+  useEffect(() => {
+    setProfileData({ name: profile?.full_name || 'Student Name', email: profile?.email || 'student@university.edu' });
+    setAvatarPreview(profile?.avatar_url || '');
+  }, [profile]);
 
   const [notifications, setNotifications] = useState({
     email: true,
@@ -20,10 +28,33 @@ export default function StudentSettings() {
     returnedWork: true
   });
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    try {
+      await updateProfile({ full_name: profileData.name });
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+    } catch (error) {
+      alert(error.message || 'Could not save profile.');
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return alert('Please choose an image file.');
+    if (file.size > 5 * 1024 * 1024) return alert('Profile pictures must be 5 MB or smaller.');
+    setAvatarPreview(URL.createObjectURL(file));
+    setIsUploading(true);
+    try {
+      await updateProfile({ avatarFile: file });
+    } catch (error) {
+      setAvatarPreview(profile?.avatar_url || '');
+      alert(error.message || 'Could not upload profile picture.');
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
   };
 
   const toggleNotification = (key) => {
@@ -53,11 +84,15 @@ export default function StudentSettings() {
           <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '2rem' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-              <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--brand-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '2rem', fontWeight: 700 }}>
-                {profileData.name.charAt(0)}
+              <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--brand-gradient)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '2rem', fontWeight: 700, border: '2px solid var(--brand-primary)' }}>
+                {avatarPreview ? <img src={avatarPreview} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileData.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <button type="button" className="btn btn-outline">Change Profile Picture</button>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
+                <button type="button" className="btn btn-outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                  {isUploading ? 'Uploading...' : 'Change Profile Picture'}
+                </button>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>PNG, JPG or WEBP · max 5 MB</div>
               </div>
             </div>
 
