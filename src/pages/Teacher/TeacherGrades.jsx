@@ -10,11 +10,9 @@ export default function TeacherGrades() {
   // but for a gradebook we want to see all assigned tasks.
   const gradebookAssignments = assignments;
 
-  // Generate mock grades for demo
-  const getMockGrade = (studentId, asgId) => {
-    // Deterministic mock grade based on ID lengths to keep it consistent
-    const score = (studentId.length * asgId.length * 7) % 30 + 70; // 70-100 range
-    return score;
+  const getGrade = (studentId, assignmentId) => {
+    const key = `${studentId}-${assignmentId}`;
+    return gradebook[key] ?? '';
   };
 
   const filteredStudents = connectedStudents.filter(
@@ -95,7 +93,7 @@ export default function TeacherGrades() {
                   </td>
                   {gradebookAssignments.map(asg => {
                     const key = `${student.id}-${asg.id}`;
-                    const grade = gradebook[key] !== undefined ? gradebook[key] : '';
+                    const grade = getGrade(student.id, asg.id);
                     
                     return (
                       <td key={asg.id} style={{ padding: '1rem 1.2rem', textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>
