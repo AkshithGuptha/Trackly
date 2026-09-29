@@ -57,8 +57,12 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          printf 'SUPABASE_URL=%s\n' "$SUPABASE_URL" | tr -d '\r\n' >> "$GITHUB_ENV"
-          printf 'SUPABASE_ANON_KEY=%s\n' "$SUPABASE_ANON_KEY" | tr -d '\r\n' >> "$GITHUB_ENV"
+          CLEAN_URL="$(printf '%s' "$SUPABASE_URL" | tr -d '\r\n')"
+          CLEAN_KEY="$(printf '%s' "$SUPABASE_ANON_KEY" | tr -d '\r\n')"
+          {
+            printf 'SUPABASE_URL=%s\n' "$CLEAN_URL"
+            printf 'SUPABASE_ANON_KEY=%s\n' "$CLEAN_KEY"
+          } >> "$GITHUB_ENV"
 
       - name: Build release APK
         run: flutter build apk --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
