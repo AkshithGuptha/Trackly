@@ -52,17 +52,19 @@ jobs:
           test -n "$SUPABASE_URL" || { echo "::error::SUPABASE_URL GitHub Actions secret is missing."; exit 1; }
           test -n "$SUPABASE_ANON_KEY" || { echo "::error::SUPABASE_ANON_KEY GitHub Actions secret is missing."; exit 1; }
 
-      - name: Build release APK
+      - name: Prepare Supabase release defines
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: flutter build apk --release --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+        run: |
+          printf 'SUPABASE_URL=%s\n' "$SUPABASE_URL" | tr -d '\r\n' >> "$GITHUB_ENV"
+          printf 'SUPABASE_ANON_KEY=%s\n' "$SUPABASE_ANON_KEY" | tr -d '\r\n' >> "$GITHUB_ENV"
+
+      - name: Build release APK
+        run: flutter build apk --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
       - name: Build Play Store AAB
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: flutter build appbundle --release --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+        run: flutter build appbundle --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
