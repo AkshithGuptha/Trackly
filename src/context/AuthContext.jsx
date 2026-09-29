@@ -61,13 +61,10 @@ export function AuthProvider({ children }) {
           setUser(session.user);
           await fetchProfile(session.user.id);
         } else {
-          // Default demo session fallback if not logged in
-          loadDemoState('student');
+          setUser(null);
+          setProfile(null);
+          clearUserData();
         }
-      } else {
-        // Fallback demo state initialization
-        const savedRole = localStorage.getItem('trackly_demo_role') || 'student';
-        loadDemoState(savedRole);
       }
 
       setLoading(false);
@@ -104,6 +101,17 @@ export function AuthProvider({ children }) {
     setConnectedStudents([DEFAULT_DEMO_STATE.student]);
   };
 
+  const clearUserData = () => {
+    setAssignments([]);
+    setProjects([]);
+    setSubmissions([]);
+    setProgressUpdates([]);
+    setNotifications([]);
+    setConnectedStudents([]);
+    setStreamPosts([]);
+    setGradebook({});
+  };
+
   const fetchProfile = async (userId) => {
     try {
       const { data, error } = await supabase
@@ -115,6 +123,9 @@ export function AuthProvider({ children }) {
       if (data) {
         setProfile(data);
         await loadUserData(data);
+      } else {
+        setProfile(null);
+        clearUserData();
       }
     } catch (err) {
       console.warn('Supabase fetchProfile error:', err);
@@ -130,8 +141,8 @@ export function AuthProvider({ children }) {
       const [asgRes, prjRes, subRes, progRes, notifRes] = await Promise.all([
         supabase.from('assignments').select('*').eq(isStudent ? 'student_id' : 'teacher_id', currentProfile.id),
         supabase.from('projects').select('*, project_tasks(*)').eq(isStudent ? 'student_id' : 'teacher_id', currentProfile.id),
-        supabase.from('submissions').select('*').eq(isStudent ? 'student_id' : 'teacher_id', currentProfile.id),
-        supabase.from('progress_updates').select('*').eq(isStudent ? 'student_id' : 'teacher_id', currentProfile.id),
+        supabase.from('submissions').select('*').eq('student_id', currentProfile.id),
+        supabase.from('progress_updates').select('*').eq('student_id', currentProfile.id),
         supabase.from('notifications').select('*').eq('user_id', currentProfile.id)
       ]);
 
@@ -204,31 +215,49 @@ export function AuthProvider({ children }) {
 
   // Data Mutation Handlers
   const addAssignment = async (assignmentData) => {
-    const newAsg = {
-      id: 'asg-' + Date.now(),
-      created_at: new Date().toISOString(),
-      status: 'Pending',
-      progress_percentage: 0,
-      ...assignmentData
-    };
-    setAssignments((prev) => [newAsg, ...prev]);
+    if (!profile?.id) throw new Error('You must be signed in to create assignments.');
 
-    // Create notification for student
-    const notif = {
-      id: 'notif-' + Date.now(),
-      user_id: assignmentData.student_id,
-      title: 'New Assignment Assigned',
-      message: `You have been assigned: ${assignmentData.title}`,
-      type: 'assignment',
-      is_read: false,
-      created_at: new Date().toISOString()
-    };
-    setNotifications((prev) => [notif, ...prev]);
-
-    if (isSupabaseConfigured) {
-      await supabase.from('assignments').insert([assignmentData]);
-      await supabase.from('notifications').insert([notif]);
+    if (!isSupabaseConfigured) {
+      const newAsg = {
+        id: 'asg-' + Date.now(),
+        created_at: new Date().toISOString(),
+        status: 'Pending',
+        progress_percentage: 0,
+        ...assignmentData,
+        teacher_id: profile.id
+      };
+      setAssignments((prev) => [newAsg, ...prev]);
+      return newAsg;
     }
+
+    if (!assignmentData.student_id) {
+      throw new Error('Select a connected student before assigning the work.');
+    }
+
+    const payload = {
+      title: assignmentData.title,
+      description: assignmentData.description || null,
+      teacher_id: profile.id,
+      student_id: assignmentData.student_id,
+      due_date: assignmentData.due_date,
+      priority: assignmentData.priority || 'Medium',
+      status: 'Pending',
+      progress_percentage: 0
+    };
+
+    const { data, error } = await supabase.from('assignments').insert(payload).select('*').single();
+    if (error) throw error;
+
+    setAssignments((prev) => [data, ...prev]);
+    await supabase.from('notifications').insert({
+      user_id: payload.student_id,
+      title: 'New Assignment Assigned',
+      message: `You have been assigned: ${payload.title}`,
+      type: 'assignment',
+      is_read: false
+    });
+
+    return data;
   };
 
   const deleteAssignment = async (assignmentId) => {
@@ -367,23 +396,56 @@ export function AuthProvider({ children }) {
   };
 
   const toggleProjectTask = async (projectId, taskId) => {
-    setProjects((prev) =>
-      prev.map((p) => {
-        if (p.id !== projectId) return p;
-        const updatedTasks = p.tasks.map((t) => (t.id === taskId ? { ...t, is_completed: !t.is_completed } : t));
-        const completedCount = updatedTasks.filter((t) => t.is_completed).length;
-        const calcProgress = Math.round((completedCount / updatedTasks.length) * 100);
-        return { ...p, tasks: updatedTasks, progress_percentage: calcProgress };
-      })
+    const project = projects.find((p) => p.id === projectId);
+    const task = project?.tasks?.find((t) => t.id === taskId);
+    if (!project || !task) return;
+
+    const nextCompleted = !task.is_completed;
+    const updatedTasks = (project.tasks || []).map((t) =>
+      t.id === taskId ? { ...t, is_completed: nextCompleted } : t
     );
+    const completedCount = updatedTasks.filter((t) => t.is_completed).length;
+    const calcProgress = updatedTasks.length
+      ? Math.round((completedCount / updatedTasks.length) * 100)
+      : 0;
+
+    if (isSupabaseConfigured) {
+      const { error: taskError } = await supabase
+        .from('project_tasks')
+        .update({ is_completed: nextCompleted })
+        .eq('id', taskId)
+        .eq('project_id', projectId);
+      if (taskError) throw taskError;
+
+      const { error: projectError } = await supabase
+        .from('projects')
+        .update({
+          progress_percentage: calcProgress,
+          status: calcProgress === 100 ? 'Completed' : 'In Progress'
+        })
+        .eq('id', projectId);
+      if (projectError) throw projectError;
+    }
+
+    setProjects((prev) => prev.map((p) =>
+      p.id === projectId
+        ? { ...p, tasks: updatedTasks, progress_percentage: calcProgress, status: calcProgress === 100 ? 'Completed' : 'In Progress' }
+        : p
+    ));
   };
 
-  const markNotificationRead = (id) => {
+  const markNotificationRead = async (id) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+    if (isSupabaseConfigured && profile?.id) {
+      await supabase.from('notifications').update({ is_read: true }).eq('id', id).eq('user_id', profile.id);
+    }
   };
 
-  const markAllNotificationsRead = () => {
+  const markAllNotificationsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    if (isSupabaseConfigured && profile?.id) {
+      await supabase.from('notifications').update({ is_read: true }).eq('user_id', profile.id);
+    }
   };
 
   return (
