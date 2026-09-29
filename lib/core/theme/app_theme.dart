@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Brand Colors
-  static const Color brandPrimary = Color(0xFF6366F1); // Indigo
-  static const Color brandSecondary = Color(0xFF8B5CF6); // Violet
+  static const Color brandPrimary = Color(0xFF6366F1);
+  static const Color brandSecondary = Color(0xFF8B5CF6);
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
-  
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -17,11 +16,13 @@ class AppTheme {
         primary: brandPrimary,
         secondary: brandSecondary,
         surface: const Color(0xFFF8FAFC),
-        background: const Color(0xFFFFFFFF),
         error: danger,
       ),
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.light().textTheme),
-      cardTheme: CardTheme(
+      scaffoldBackgroundColor: const Color(0xFFFFFFFF),
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(
+        ThemeData.light().textTheme,
+      ),
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -34,7 +35,9 @@ class AppTheme {
           backgroundColor: brandPrimary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ),
     );
@@ -48,11 +51,13 @@ class AppTheme {
         primary: brandPrimary,
         secondary: brandSecondary,
         surface: const Color(0xFF131B2E),
-        background: const Color(0xFF0B0F17),
         error: danger,
       ),
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme),
-      cardTheme: CardTheme(
+      scaffoldBackgroundColor: const Color(0xFF0B0F17),
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(
+        ThemeData.dark().textTheme,
+      ),
+      cardTheme: CardThemeData(
         elevation: 0,
         color: const Color(0xFF131B2E),
         shape: RoundedRectangleBorder(
@@ -66,7 +71,9 @@ class AppTheme {
           backgroundColor: brandPrimary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ),
     );
