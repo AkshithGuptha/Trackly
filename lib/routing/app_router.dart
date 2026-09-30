@@ -18,12 +18,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     redirect: (context, state) {
       final loggedIn = Supabase.instance.client.auth.currentSession != null;
-      if (!loggedIn && state.matchedLocation != '/login') return '/login';
+      if (!loggedIn && state.matchedLocation != '/login' && state.matchedLocation != '/signup') return '/login';
       if (loggedIn && state.matchedLocation == '/login') return '/dashboard';
       return null;
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
       GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
     ],
   );
