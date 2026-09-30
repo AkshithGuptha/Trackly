@@ -150,7 +150,7 @@ class _ProgressRow extends StatelessWidget {
   final double value;
   const _ProgressRow({required this.title, required this.value});
   @override Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 13), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Row(children: [Expanded(child: Text(title, style: const TextStyle(color: Color(0xFFB9BDCA), fontSize: 12)), Text((value * 100).round().toString() + '%', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))]),
+    Row(children: [Expanded(child: Text(title, style: const TextStyle(color: Color(0xFFB9BDCA), fontSize: 12))), Text('${(value * 100).round()}%', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))]),
     const SizedBox(height: 7),
     ClipRRect(borderRadius: BorderRadius.circular(10), child: LinearProgressIndicator(value: value, minHeight: 6, backgroundColor: Colors.white10, valueColor: const AlwaysStoppedAnimation(Color(0xFFFF1238)))),
   ]));
@@ -159,7 +159,7 @@ class _ProgressRow extends StatelessWidget {
 class _Pill extends StatelessWidget {
   final String text;
   const _Pill({required this.text});
-  @override Widget build(BuildContext context) => Container(margin: const EdgeInsets.only(right: 24), child: Row(children: [const Text('•', style: TextStyle(color: Color(0xFFFF1238), fontSize: 18)), const SizedBox(width: 7), Text(text, style: const TextStyle(color: Color(0xFFD5D7DE), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: .8)]));
+  @override Widget build(BuildContext context) => Container(margin: const EdgeInsets.only(right: 24), child: Row(children: [const Text('•', style: TextStyle(color: Color(0xFFFF1238), fontSize: 18)), const SizedBox(width: 7), Text(text, style: const TextStyle(color: Color(0xFFD5D7DE), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: .8))]));
 }
 
 class _FeatureCard extends StatelessWidget {
