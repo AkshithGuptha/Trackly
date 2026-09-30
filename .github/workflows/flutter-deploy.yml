@@ -3,6 +3,8 @@ name: Trackly Android Release
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -65,7 +67,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Build Play Store AAB
-        run: flutter build appbundle --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+        run: flutter build appbundle --release --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
       - name: Upload Play Store AAB
         uses: actions/upload-artifact@v4
