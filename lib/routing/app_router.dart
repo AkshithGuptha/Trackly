@@ -62,12 +62,13 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 460),
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 40),
                 Text('TRACKLY', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w800)),
                 const SizedBox(height: 8),
                 Text('Track your work. See your progress.', style: Theme.of(context).textTheme.bodyLarge),
@@ -81,6 +82,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
                 const SizedBox(height: 20),
                 FilledButton(onPressed: loading ? null : submit, child: Text(loading ? 'Signing in…' : 'Sign in')),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: loading ? null : () => context.go('/signup'),
+                  child: const Text("Don't have an account? Sign up"),
+                ),
               ],
             ),
           ),
@@ -91,6 +97,118 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() { email.dispose(); password.dispose(); super.dispose(); }
+}
+
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
+  @override State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  final name = TextEditingController();
+  final email = TextEditingController();
+  final password = TextEditingController();
+  String role = 'student';
+  bool loading = false;
+  String? error;
+  String? success;
+
+  Future<void> submit() async {
+    final fullName = name.text.trim();
+    final userEmail = email.text.trim();
+    if (fullName.isEmpty || userEmail.isEmpty || password.text.isEmpty) {
+      setState(() { error = 'Please fill in all fields.'; success = null; });
+      return;
+    }
+    if (password.text.length < 6) {
+      setState(() { error = 'Password must be at least 6 characters.'; success = null; });
+      return;
+    }
+
+    setState(() { loading = true; error = null; success = null; });
+    try {
+      final response = await Supabase.instance.client.auth.signUp(
+        email: userEmail,
+        password: password.text,
+        data: {'full_name': fullName, 'role': role},
+      );
+
+      if (!mounted) return;
+      if (response.session != null) {
+        context.go('/dashboard');
+      } else {
+        setState(() {
+          success = 'Account created. Check your email to confirm your account, then sign in.';
+        });
+      }
+    } on AuthException catch (e) {
+      setState(() => error = e.message);
+    } catch (_) {
+      setState(() => error = 'Unable to create your account. Check your connection and try again.');
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 24),
+                Text('CREATE ACCOUNT', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 8),
+                Text('Join Trackly and start tracking your work.', style: Theme.of(context).textTheme.bodyLarge),
+                const SizedBox(height: 28),
+                TextField(controller: name, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Full name')),
+                const SizedBox(height: 14),
+                TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email')),
+                const SizedBox(height: 14),
+                TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'Password (minimum 6 characters)')),
+                const SizedBox(height: 14),
+                DropdownButtonFormField<String>(
+                  value: role,
+                  decoration: const InputDecoration(labelText: 'Account type'),
+                  items: const [
+                    DropdownMenuItem(value: 'student', child: Text('Student')),
+                    DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
+                  ],
+                  onChanged: loading ? null : (value) => setState(() => role = value ?? 'student'),
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                ],
+                if (success != null) ...[
+                  const SizedBox(height: 12),
+                  Text(success!, style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+                ],
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: loading ? null : submit,
+                  child: Text(loading ? 'Creating account…' : 'Create account'),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: loading ? null : () => context.go('/login'),
+                  child: const Text('Already have an account? Sign in'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  @override
+  void dispose() { name.dispose(); email.dispose(); password.dispose(); super.dispose(); }
 }
 
 class DashboardScreen extends StatelessWidget {
