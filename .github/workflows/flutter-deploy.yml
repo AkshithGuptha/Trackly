@@ -73,3 +73,13 @@ jobs:
           name: trackly-play-store-aab
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
+
+      - name: Build direct-install APK
+        run: flutter build apk --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+
+      - name: Upload direct-install APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: trackly-direct-install-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
