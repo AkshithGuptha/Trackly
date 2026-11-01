@@ -289,3 +289,62 @@ html, body {
   .hero-panel-floating { display: none; }
   .footer-bottom { flex-direction: column; gap: 2rem; }
 }
+
+
+/* ORYZO adaptation for Trackly landing page */
+:root {
+  --midu-bg:#100904; --midu-text:#ffedd7; --midu-muted:#b5a18c;
+  --midu-border:#40372e; --midu-surface:#160e08;
+  --font-sans:Inter,"Segoe UI",sans-serif;
+}
+html,body,.landing-container { background:#100904 !important; color:#ffedd7 !important; font-family:Inter,"Segoe UI",sans-serif !important; }
+.landing-container { min-height:100vh; }
+.landing-nav { padding:1.1rem 4vw; background:rgba(16,9,4,.82); border-bottom:1px dashed #40372e; backdrop-filter:blur(8px); }
+.nav-logo { color:#ffedd7; font-size:1rem; font-weight:500; text-transform:uppercase; }
+.nav-logo-icon { background:#382416; color:#ffedd7; border:1px solid #6c5f51; border-radius:50%; }
+.nav-links { gap:2rem; color:#ffedd7; font-size:.75rem; text-transform:uppercase; }
+.nav-link:hover,.footer-link:hover { color:#dc5000; }
+.nav-btn,.hero-btn-primary { background:#382416 !important; color:#ffedd7 !important; border:1px solid #6c5f51 !important; border-radius:36px !important; text-transform:uppercase; font-size:.78rem !important; font-weight:500 !important; box-shadow:none !important; }
+.hero-section { min-height:115vh; padding-top:19vh; background:#100904; }
+.hero-massive-text {
+  font-family:Inter,"Segoe UI",sans-serif !important; font-weight:500 !important;
+  background:none !important; color:rgba(255,237,215,.045) !important; filter:none !important;
+  letter-spacing:0 !important; font-size:clamp(8rem,24vw,24rem) !important;
+}
+.hero-badge { background:#160e08 !important; border:1px dashed #40372e !important; color:#ffedd7 !important; border-radius:9999px !important; box-shadow:none !important; text-transform:uppercase; font-size:.7rem !important; }
+.hero-badge .dot { background:#dc5000 !important; box-shadow:none !important; }
+.hero-title { color:#ffedd7 !important; font-family:Inter,"Segoe UI",sans-serif !important; font-size:clamp(2.8rem,7vw,5.2rem) !important; font-weight:500 !important; letter-spacing:0 !important; line-height:.92 !important; text-transform:uppercase; text-shadow:none !important; }
+.hero-title .serif { color:#ffedd7 !important; font-family:Inter,"Segoe UI",sans-serif !important; font-style:normal !important; font-weight:500 !important; }
+.hero-desc { color:#d2bfa9 !important; font-size:clamp(1rem,1.5vw,1.25rem) !important; font-weight:400 !important; line-height:1.5 !important; text-shadow:none !important; }
+.hero-panel-main,.hero-panel-floating,.glow-card,.ui-stat-glass,.ui-task-item {
+  background:#160e08 !important; border:1px solid #40372e !important; border-radius:12px !important;
+  box-shadow:none !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+}
+.hero-panel-main::before,.hero-panel-floating::before,.glow-card::before { display:none !important; }
+.ui-header-glass { background:#160e08 !important; border-bottom:1px dashed #40372e !important; }
+.ui-avatar { background:#382416 !important; color:#ffedd7 !important; }
+.ui-badge-glass { background:#382416 !important; border:1px solid #6c5f51 !important; border-radius:9999px !important; color:#ffedd7 !important; }
+.marquee-wrapper { background:#100904 !important; border-color:#40372e !important; }
+.marquee-content { color:#b5a18c !important; text-transform:uppercase; }
+.marquee-content .dot,.section-tag,.quote-author span,.faq-icon.open { color:#dc5000 !important; }
+.showcase-section,.testimonial-section,.faq-section { color:#ffedd7; }
+.section-tag { font-family:Inter,"Segoe UI",sans-serif !important; font-style:normal !important; font-size:.75rem !important; text-transform:uppercase; }
+.section-title,.feature-title,.faq-q { color:#ffedd7 !important; font-weight:500 !important; text-transform:uppercase; letter-spacing:0 !important; }
+.feature-desc,.faq-a p { color:#b5a18c !important; }
+.feature-icon { background:#382416 !important; border:1px solid #6c5f51 !important; border-radius:12px !important; color:#ffedd7 !important; }
+.showcase-visual { background:#21150d !important; border:1px dashed #40372e !important; }
+.quote-text { color:#ffedd7 !important; font-family:Inter,"Segoe UI",sans-serif !important; font-style:normal !important; font-weight:400 !important; }
+.quote-author { color:#b5a18c !important; text-transform:uppercase; }
+.faq-item,.midu-footer,.footer-bottom { border-color:#40372e !important; }
+.footer-cta-text { color:#ffedd7 !important; font-family:Inter,"Segoe UI",sans-serif !important; font-style:normal !important; font-weight:500 !important; text-transform:uppercase; }
+.footer-cta-text:hover { color:#dc5000 !important; }
+.footer-bottom { color:#b5a18c !important; text-transform:uppercase; font-size:.75rem !important; }
+@media (max-width:767px) {
+  .hero-section { min-height:100vh; padding:17vh 6vw 5rem !important; }
+  .hero-title { font-size:clamp(2.45rem,12vw,4rem) !important; }
+  .hero-desc { font-size:1rem !important; }
+  .hero-actions { flex-wrap:wrap; justify-content:center; }
+  .hero-ui-composition { margin-top:4rem; }
+  .glow-content { padding:1.5rem !important; }
+  .showcase-section,.testimonial-section,.faq-section { padding-top:5rem !important; padding-bottom:5rem !important; }
+}
